@@ -1,47 +1,95 @@
 import firebase_admin
 import serial
 import random
+import time
 from firebase_admin import credentials
 from firebase_admin import db
 from firebase_admin import firestore
 
-# ser = serial.Serial(
-#     port='COM6',
-#     baudrate=9600,
-# )
+class Position:
+    def __init__(self, latitude = 0, longitude = 0, t = ''):
+        self.latitude = latitude
+        self.longitude = longitude
+        self.time = t
 
-count = 0
+    def to_dict(self):
+        dest = {
+            u'created_at': self.time,
+            u'latitude': self.latitude,
+            u'longitude': self.longitude
+        }
+        return dest
+
+class Heart:
+    def __init__(self, heart_rate = 0, t = ''):
+        self.heart_rate = heart_rate
+        self.time = t
+
+    def to_dict(self):
+        dest = {
+            u'created_at': self.time,
+            u'heart_rate': self.heart_rate
+        }
+        return dest
+
+class Light:
+    def __init__(self, inpersity = 0, t = ''):
+        self.inpersity = inpersity
+        self.time = t
+
+    def to_dict(self):
+        dest = {
+            u'created_at': self.time,
+            u'inpersity': self.inpersity
+        }
+        return dest
+
+class Breath:
+    def __init__(self, breath = 0, t = ''):
+        self.breath = breath
+        self.time = t
+
+    def to_dict(self):
+        dest = {
+            u'created_at': self.time,
+            u'breath': self.breath
+        }
+        return dest
 
 cred = credentials.Certificate('smart-pet-collar-4am-firebase-adminsdk-mg4bv-590a0331b7.json')
 firebase_admin.initialize_app(cred,{
     'projectID' : 'smart-pet-collar-4am'
 })
 
-db = firestore.client()
+ser = serial.Serial(
+    port='COM6',
+    baudrate=9600,
+)
 
-doc_ref = db.collection(u'sensor').document(u'heartrate')
+while (ser.readable()):
+    data = ser.readline().decode().strip(',')
+    t = time.strftime('%X')
 
-# while (ser.readable()):
-#     count += 1
-#     data = ser.readline().decode()
-doc_ref.set({u'1': 1})
-for i in range(50):
-    doc_ref.update({'%d' %i : (random.randint(100,120),1)})
-#ref = db.reference()
+    db1 = firestore.client()
+    heart_col = db1.collection(u'heart sensor')
+    heart = Heart(u'%d' %1, t)
+    heart_col.add(heart.to_dict())
 
-#ref = db.reference('heartrate')
-#for i in range(50):
-#    ref.update({i : random.randint(90,120)})
+    # db2 = firestore.client()
+    # breath_col = db2.collection(u'breath sensor').document(u'a').set({'1':2})
+    # breath = Breath(latitude= u'%d' %1, longitude = u'a', t = time.strftime('%X'))
+    # breath_col.add(breath.to_dict())
+
+    # db3 = firestore.client()
+    # light_col = db3.collection(u'light sensor').document(u'a').set({'1':2})
+    # light = Light(latitude= u'%d' %1, longitude = u'a', t = time.strftime('%X'))
+    # light_col.add(light.to_dict())
+
+    db4 = firestore.client()
+    GPS_col = db4.collection(u'GPS sensor')
+    pos = Position(u'%d' %1, u'a', t)
+    GPS_col.add(pos.to_dict())
+
+    time.sleep(1)
 
 #'databaseURL' : 'https://smart-pet-collar-4am-default-rtdb.firebaseio.com'
-
-class Position:
-    def __init__(self, latitude = 0, longitude = 0):
-        self.latitude = latitude
-        self.longitude = longitude
-
-    def get_latitude(self):
-        return self.latitude
-
-    def get_longitude(self):
-        return self.longitude
